@@ -131,6 +131,10 @@ for(i = 0; i < 2;i++)
 
 return;
 }
+/**
+** This function returns a unique number
+** between 1 to MAX_NODE which is randomly chosen
+*/
 int AodvExample::set_position(int dir)
 {
 
@@ -163,10 +167,7 @@ AodvExample::Run ()
   InstallApplications ();
   
   std::cout << "Starting simulation for " << totalTime << " s ...\n";
- // struct timeval now;
- // gettimeofday(&now,NULL);
- // printf("Time is %d:%d\n",(int)now.tv_sec,(int)now.tv_usec);
-
+ 
   Simulator::Stop (Seconds (totalTime));
   //Simulator::Run ();
   Visualizer::Run ();
@@ -210,7 +211,7 @@ AodvExample::CreateNodes ()
   {
   while( (x = set_position(0)) == -1) {}
   while( (y = set_position(1)) == -1) {}
-  printf("X:%d, Y:%d\n",x,y);
+  //printf("X:%d, Y:%d\n",x,y);
   positionAlloc->Add (Vector (x, y, 0.0));
   //positionAlloc->Add (Vector (5.0, 0.0, 0.0));
   }  
