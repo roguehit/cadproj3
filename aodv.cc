@@ -34,9 +34,9 @@
 #include "ns3/visualizer.h"
 #include <sys/time.h>
 #include <assert.h>
+#include <math.h>
 
-
-#define MAX_NODE 1500
+#define MAX_NODE 1000
 #define RAND ( rand() % (MAX_NODE) + (1) )
 #define TRUE 0x1
 #define FALSE 0x0
@@ -63,6 +63,8 @@ private:
   uint32_t size;
   /// Distance between nodes, meters
   double step;
+  /// Transmit Power
+  double power;
   /// Simulation time, seconds
   double totalTime;
   /// Write per-device PCAP traces if true
@@ -114,12 +116,19 @@ AodvExample::Configure (int argc, char **argv)
   SeedManager::SetSeed(12345);
   CommandLine cmd;
   
+  power = 10; 
+
   cmd.AddValue ("pcap", "Write PCAP traces.", pcap);
   cmd.AddValue ("size", "Number of nodes.", size);
   cmd.AddValue ("time", "Simulation time, s.", totalTime);
   cmd.AddValue ("step", "Grid step, m", step);
-  
+  cmd.AddValue ("power","Transmit Power",power);
   cmd.Parse (argc, argv);
+
+  /// Converting to dBm
+  power = 10 * log10 (power/1000) + 30;
+
+  //printf("Power Set is %f",(float)power); 
   return true;
 }
 void AodvExample::init_position()
@@ -140,6 +149,7 @@ int AodvExample::set_position(int dir)
 
         struct timeval now;
         gettimeofday(&now,NULL);
+        //Comment this to get random placement for each run
         srand(now.tv_usec);
 	unsigned int i;
 	int index = RAND;
@@ -230,6 +240,9 @@ AodvExample::CreateDevices ()
   YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
   wifiPhy.SetChannel (wifiChannel.Create ());
+
+  wifiPhy.set(SetTxPowerStart,power);
+
   WifiHelper wifi = WifiHelper::Default ();
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode", StringValue ("OfdmRate6Mbps"), "RtsCtsThreshold", UintegerValue (0));
   devices = wifi.Install (wifiPhy, wifiMac, nodes); 
