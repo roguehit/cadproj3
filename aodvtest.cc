@@ -71,6 +71,8 @@ private:
   //\}
   double dutycycle;
   double dutyinterval;
+  double intensity;
+  double datarate;
  
   int track_position[2][MAX_NODE]; 
   ///\name network
@@ -124,6 +126,9 @@ AodvExample::Configure (int argc, char **argv)
   power = 1000; 
   dutycycle = 0.5;
   dutyinterval = 1;
+  totalTime = 10;
+  intensity = 0.2;
+  datarate = 1;
 
   cmd.AddValue ("pcap", "Write PCAP traces.", pcap);
   cmd.AddValue ("size", "Number of nodes.", size);
@@ -132,7 +137,12 @@ AodvExample::Configure (int argc, char **argv)
   cmd.AddValue ("power","Transmit Power",power);
   cmd.AddValue ("duty","DutyCycle",dutycycle);
   cmd.AddValue ("interval","DutyInterval",dutyinterval);
+  cmd.AddValue ("intensity","Intensity",intensity);
+  cmd.AddValue ("datarate","Application Datarate",datarate);
   cmd.Parse (argc, argv);
+
+  // Intensity for entire network = (Rate * Duty Cycle * N) / Capacity 
+  dutycycle = (intensity*6) / (size * datarate);
 
   assert ((dutycycle <=1 ) && (dutycycle >= 0));
 
@@ -222,7 +232,8 @@ AodvExample::PrintStats ()
       //std::cout << "  Throughput: " << i->second.rxBytes * 8.0 / 10.0 / 1024 / 1024  << " Mbps\n";
       }
     }
-printf("Efficiency = %f , Duty %f\n",(float)rxByte/txByte,dutycycle);
+printf("Eff = %f ,Int = %f ,Siz = %d ,Pow = %f\n",(float)rxByte/txByte,intensity,size,power);
+
 }
 
 bool 
@@ -356,7 +367,8 @@ AodvExample::InstallApplications ()
   Address remote (InetSocketAddress( interfaces.GetAddress( i-size/2),port_ary[j]));
   OnOffHelper onOffHelper("ns3::UdpSocketFactory",remote);
 
-  onOffHelper.SetAttribute ("DataRate", StringValue ("1Mbps"));
+//  onOffHelper.SetAttribute ("DataRate", StringValue ("1Mbps"));
+  onOffHelper.SetAttribute ("DataRate", DataRateValue (DataRate (datarate * 1000000)));
   onOffHelper.SetAttribute ("OnTime",  RandomVariableValue (ConstantVariable (dutycycle*dutyinterval)));
   onOffHelper.SetAttribute ("OffTime", RandomVariableValue (ConstantVariable (dutyinterval-dutycycle*dutyinterval)));
 
